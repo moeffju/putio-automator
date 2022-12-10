@@ -1,26 +1,28 @@
 """
 Commands to manage torrents on Put.IO.
 """
-import logging
-logger = logging.getLogger(__name__)
 
-import click
+import logging
 import os
-import putiopy
 import subprocess
 import sys
 import time
 
+import click
+import putiopy
+from watchdog.events import FileSystemEventHandler
+from watchdog.observers import Observer
+
 from putio_automator.cli import cli
 from putio_automator.db import with_db
 
-from watchdog.observers import Observer
-from watchdog.events import FileSystemEventHandler
+logger = logging.getLogger(__name__)
 
 
 @cli.group()
 def torrents():
     pass
+
 
 @torrents.command()
 @click.pass_context
@@ -45,32 +47,44 @@ def add(ctx, parent_id=None):
                 path = os.path.join(folder, name)
                 size = os.path.getsize(path)
 
-                conn.execute("select datetime(created_at, 'localtime') from torrents where name = ? and size = ?", (name, size))
+                conn.execute(
+                    "SELECT DATETIME(created_at, 'localtime') FROM torrents WHERE name = ? AND size = ?", (name, size))
                 row = conn.fetchone()
 
                 if row is None:
                     try:
                         logger.debug('adding torrent: %s' % path)
-                        transfer = ctx.obj['CLIENT'].Transfer.add_torrent(path, parent_id=parent_id)
+                        transfer = ctx.obj['CLIENT'].Transfer.add_torrent(
+                            path, parent_id=parent_id)
                         os.unlink(path)
-                        logger.info('added transfer: %s - %s' % (transfer.id, name))
+                        logger.info('added transfer: %s - %s' %
+                                    (transfer.id, name))
                     except:
                         info = sys.exc_info()
 
-                        if info[0] == putiopy.ClientError and info[1].type == 'UnknownError':
-                            # Assume it's already added
-                            os.unlink(path)
-                            logger.warning('deleted torrent, already added : %s' % (name,))
+                        if info[0] == putiopy.ClientError:
+                            if info[1].type == 'TRANSFER_ALREADY_ADDED':
+                                # os.unlink(path)
+                                logger.warning(
+                                    'skipping torrent, already added: %s' % (name,))
+                            else:
+                                logger.warning(
+                                    'unhandled ClientError: {}'.format(info[1]))
+                        elif info[0].__class__ == 'requests.exceptions.ReadTimeout':
+                            logger.warning('Read timeout: {}'.format(info))
                         else:
                             raise
 
-                    conn.execute('insert into torrents (name, size) values (?, ?)', (name, size))
+                    conn.execute(
+                        'INSERT INTO torrents (name, size) VALUES (?, ?)', (name, size))
                     connection.commit()
                 else:
                     os.unlink(path)
-                    logger.warning('deleted torrent, added at %s : %s' % (row[0], name))
+                    logger.warning(
+                        'deleted torrent, added at %s : %s' % (row[0], name))
 
         with_db(func)
+
 
 @torrents.command()
 @click.pass_context
@@ -100,9 +114,11 @@ def watch(ctx, parent_id=None, mount=False, sleep=5, wait_for_closed=5):
             try:
                 time.sleep(wait_for_closed)
                 torrent_path = event.src_path
-                ctx.obj['CLIENT'].Transfer.add_torrent(torrent_path, parent_id=parent_id)
+                ctx.obj['CLIENT'].Transfer.add_torrent(
+                    torrent_path, parent_id=parent_id)
                 os.unlink(torrent_path)
-                logger.debug('added torrent, on_created event for: %s' % torrent_path)
+                logger.debug(
+                    'added torrent, on_created event for: %s' % torrent_path)
             except Exception as e:
                 click.echo('error adding torrent: %s %s' % (torrent_path, e))
                 logger.error('error adding torrent: %s %s' % (torrent_path, e))

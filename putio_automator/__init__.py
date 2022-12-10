@@ -1,23 +1,25 @@
 """
 Initialize the application.
 """
+
+import datetime
 import logging
-logger = logging.getLogger(__name__)
+import os
 
 import appdirs
 import click
-import datetime
-import distutils.dir_util
-import os
-import putiopy
-import sqlite3
+
+from .db import create_db, database_path
+
+logger = logging.getLogger(__name__)
+
 
 APP_NAME = 'putio-automator'
 APP_AUTHOR = 'datashaman'
 DIRS = appdirs.AppDirs(APP_NAME, APP_AUTHOR)
 
-from .db import create_db, database_path
 create_db()
+
 
 def date_handler(obj):
     "Date handler for JSON serialization"
@@ -25,6 +27,7 @@ def date_handler(obj):
         return obj.isoformat()
     else:
         return None
+
 
 def find_config(verbose=False):
     "Search for config on wellknown paths"
@@ -47,6 +50,7 @@ def find_config(verbose=False):
             break
 
     return config
+
 
 def echo(level, message):
     log_func = getattr(logger, level)

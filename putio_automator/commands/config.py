@@ -2,13 +2,13 @@
 Commands for managing config of the application
 """
 
-import appdirs
-import click
-import json
 import os
 import stat
 
-from putio_automator import APP_NAME, APP_AUTHOR, date_handler, echo, find_config, logger
+import appdirs
+import click
+
+from putio_automator import APP_AUTHOR, APP_NAME, echo, find_config
 from putio_automator.cli import cli
 
 
@@ -16,7 +16,8 @@ def find_config_dist():
     "Search for the config.py.dist file"
     search_paths = [
         os.path.join(os.getcwd(), 'etc', 'config.py.dist'),
-        os.path.join(os.getenv('HOME'), '.local', 'share', APP_NAME, 'config.py.dist'),
+        os.path.join(os.getenv('HOME'), '.local',
+                     'share', APP_NAME, 'config.py.dist'),
         os.path.join('/etc', APP_NAME, 'config.py.dist'),
     ]
 
@@ -29,9 +30,11 @@ def find_config_dist():
 
     return config
 
+
 @cli.group()
 def config():
     pass
+
 
 @config.command()
 def init(site=False):
@@ -47,8 +50,10 @@ def init(site=False):
 
     config_path = os.path.join(base_dir, 'config.py')
 
-    incomplete = os.path.realpath(click.prompt('Incomplete directory', 'incomplete'))
-    downloads = os.path.realpath(click.prompt('Downloads directory', 'downloads'))
+    incomplete = os.path.realpath(click.prompt(
+        'Incomplete directory', 'incomplete'))
+    downloads = os.path.realpath(click.prompt(
+        'Downloads directory', 'downloads'))
     torrents = os.path.realpath(click.prompt('Torrents directory', 'torrents'))
 
     putio_token = click.prompt('OAuth Token')
@@ -69,6 +74,7 @@ def init(site=False):
 
     echo('info', 'Config written to %s' % config_path)
 
+
 @config.command()
 def show():
     "Show config filename and current config"
@@ -78,5 +84,3 @@ def show():
         echo('info', 'Found config file at %s' % config_file)
     else:
         echo('error', 'Config file not found')
-
-    # logger.info('Current config:\n%s' % json.dumps(app.config, indent=4, default=date_handler))

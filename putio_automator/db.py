@@ -1,13 +1,14 @@
-import appdirs
 import os
 import pathlib
 import sqlite3
 
-from putio_automator import APP_NAME, APP_AUTHOR
+import appdirs
 
+from putio_automator import APP_AUTHOR, APP_NAME
 
 user_data_dir = appdirs.user_data_dir(APP_NAME, APP_AUTHOR)
 database_path = os.path.join(user_data_dir, 'downloads.db')
+
 
 def with_db(func):
     if not os.path.exists(database_path):
@@ -17,9 +18,10 @@ def with_db(func):
     with sqlite3.connect(database_path) as connection:
         func(connection)
 
+
 def create_db():
     def func(connection):
         c = connection.cursor()
-        c.execute('create table if not exists torrents (name character varying primary key, size integer, created_at timestamp default current_timestamp)')
-        c.execute('create table if not exists downloads (id integer primary key, name character varying, size integer, created_at timestamp default current_timestamp)')
+        c.execute('CREATE TABLE IF NOT EXISTS torrents (name CHARACTER VARYING PRIMARY KEY, size INTEGER, created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP)')
+        c.execute('CREATE TABLE IF NOT EXISTS downloads (id INTEGER PRIMARY KEY, name CHARACTER VARYING, size INTEGER, created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP)')
     with_db(func)

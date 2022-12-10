@@ -3,17 +3,17 @@ Commands for managing Put.IO account
 """
 
 import click
-import yaml
 import putiopy
-import sys
+import yaml
 
-from putio_automator import date_handler, echo, logger
+from putio_automator import echo
 from putio_automator.cli import cli
 
 
 @cli.group()
 def account():
     pass
+
 
 @account.command()
 @click.pass_context

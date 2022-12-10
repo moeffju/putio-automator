@@ -1,6 +1,7 @@
 """
 Commands to manage the download database
 """
+
 import click
 
 from putio_automator import echo, logger
@@ -12,6 +13,7 @@ from putio_automator.db import with_db
 def db():
     pass
 
+
 @db.command()
 @click.argument('name')
 def forget(name):
@@ -21,7 +23,9 @@ def forget(name):
         "Do the above"
         logger.debug('Delete downloads with name like %s' % name)
         conn = connection.cursor()
-        conn.execute('delete from downloads where name like ?', ('%%%s%%' % name,))
-        echo('info', 'Deleted %d rows with name like %s' % (conn.rowcount, name))
+        conn.execute('DELETE FROM downloads WHERE name LIKE ?',
+                     ('%%%s%%' % name,))
+        echo('info', 'Deleted %d rows with name like %s' %
+             (conn.rowcount, name))
 
     with_db(func)

@@ -3,10 +3,10 @@
 CLI entry module.
 """
 
-import click
 import importlib.util
 import logging
-import os
+
+import click
 import putiopy
 
 from . import find_config
@@ -54,9 +54,9 @@ def cli(ctx, token=None, root=None, downloads=None, incomplete=None, torrents=No
     ctx.obj['INCOMPLETE'] = incomplete
     ctx.obj['TORRENTS'] = torrents
 
-    logging.basicConfig(filename=log_filename, format='%(asctime)s - %(name)s - %(levelname)s - %(message)s', level=log_level)
+    logging.basicConfig(filename=log_filename,
+                        format='%(asctime)s - %(name)s - %(levelname)s - %(message)s', level=log_level)
 
-from . import commands
 
 def main():
     cli(auto_envvar_prefix='PUTIO', obj={})
